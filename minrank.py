@@ -469,6 +469,14 @@ def has_forbidden_induced_subgraph(graph):
     return False
 
 
+# if in library mode, we need to import this.
+# if it is just included in a sage notebook, then it is in the global namespace
+# so we try importing it if we can.  If we can't import it, then just trust that
+# everything is in the global namespace.
+try:
+    from minrank_c import zero_forcing_set_wavefront
+except ImportError:
+    pass
 
 
 def min_rank_by_bounds(graph, tests = ['precomputed', 'order', 'zero forcing', 'not path', 'forbidden minrank 2', 'not planar', 'not outer planar', 'clique cover', 'diameter']):
@@ -521,8 +529,7 @@ def min_rank_by_bounds(graph, tests = ['precomputed', 'order', 'zero forcing', '
             upper_bound['zero forcing (tree)'] = lower_bound['zero forcing']
 
     if 'zero forcing fast' in tests:
-        #from minrank_c import zero_forcing_set
-        lower_bound['zero forcing fast'] = order - zero_forcing_set(graph)[0]
+        lower_bound['zero forcing fast'] = order - zero_forcing_set_wavefront(graph)[0]
         # Check if graph is a tree.  
         # If yes, then the ZFS will determine minimum rank.
         if graph.is_tree():

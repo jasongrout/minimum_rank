@@ -30,7 +30,10 @@ include "sage/misc/bitset_pxd.pxi"
 include "sage/misc/bitset.pxi"
 from sage.misc.bitset cimport FrozenBitset, Bitset
 
-cdef update(bitset_s *neighbors,bitset_s *unfilled):
+cdef update_wavefront(bitset_s *neighbors,bitset_s *unfilled):
+    """
+    Run zero forcing as much as possible
+    """
     cdef bitset_t unfilled_neighbors
     cdef bitset_t filled_active
     cdef bitset_t filled_active_copy
@@ -73,7 +76,7 @@ cdef update(bitset_s *neighbors,bitset_s *unfilled):
             
 from sage.graphs.all import Graph            
 
-def zero_forcing_set(matrix):
+def zero_forcing_set_wavefront(matrix):
     """
     Calculate a zero forcing set.
 
@@ -84,7 +87,7 @@ def zero_forcing_set(matrix):
 
     OUTPUT:
 
-    blah
+    A zero forcing set as a frozen set
     
     
     EXAMPLE::
@@ -184,7 +187,7 @@ def zero_forcing_set(matrix):
                     bitset_copy(closure_to_add_unfilled, unfilled_set)
                     bitset_difference(closure_to_add_unfilled, closure_to_add_unfilled, closure_to_add_initial)
                     #print "  before calling zfs algorithm, unfilled is: ", bitset_string(closure_to_add_unfilled)
-                    update(neighbors_set, closure_to_add_unfilled)
+                    update_wavefront(neighbors_set, closure_to_add_unfilled)
                     #print "  after running zfs: ", bitset_string(closure_to_add_unfilled)
 
                     # subtract one unfilled neighbor from the initial zero forcing set, 
