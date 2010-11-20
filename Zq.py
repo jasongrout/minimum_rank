@@ -27,7 +27,13 @@ brute-force approach to trying various bitsets.
 #######################################################################
 
 
-from Zq_c import can_push, neighbors_connected_components
+try:
+   from Zq_c import can_push, neighbors_connected_components
+except ImportError:
+   # assume everything is in the global space
+   # this happens when, for example, someone "load"s the right files
+   # in the Sage notebook
+   pass
 
 from itertools import combinations,chain
 def subsets(s,r=None):
