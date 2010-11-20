@@ -41,6 +41,12 @@ def subsets(s,r=None):
 
 from sage.all import Bitset,FrozenBitset
 def zero_forcing_sets(G=None,neighbors=None):
+    """
+    Calculate all zero forcing sets
+
+    Returns the zero forcing number, a minimal zero forcing set, and a
+    set of all zero forcing sets
+    """
     if neighbors is None:
         n=G.order()
         neighbors=[Bitset(G.neighbors(i),capacity=n) for i in range(n)]
