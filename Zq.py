@@ -29,55 +29,6 @@ of the graph, and a brute-force approach to trying various bitsets.
 
 from Zq_c import can_push, neighbors_connected_components
 
-def zerosgame(graph, initial_set=[], one_step=False):
-   """
-   Apply the color-change rule to a given graph given an optional
-   initial set.
-
-   :param graph: the graph on which to apply the rule
-   :param initial_set: the set of "zero" (black) vertices in the graph
-   
-   :return: the list of zero (black) vertices in the resulting derived
-        coloring
-
-   EXAMPLES:: 
-
-        sage: from sage.graphs.minrank import zerosgame
-        sage: zerosgame(graphs.PathGraph(5))
-        []
-        sage: zerosgame(graphs.PathGraph(5),[0])
-        [0, 1, 2, 3, 4]
-   """
-   new_zero_set=set(initial_set)
-   zero_set=set([])
-   zero_neighbors={}
-   active_zero_set = set([])
-   inactive_zero_set = set([])
-   another_run=True
-   while another_run:
-       another_run=False
-       # Add the new zero vertices
-       zero_set.update(new_zero_set)
-       active_zero_set.update(new_zero_set)
-       active_zero_set.difference_update(inactive_zero_set)
-       zero_neighbors.update([[i, 
-                   set(graph.neighbors(i)).difference(zero_set)] 
-                              for i in new_zero_set])
-       # Find the next set of zero vertices
-       new_zero_set.clear()
-       inactive_zero_set.clear()
-       for v in active_zero_set:
-           zero_neighbors[v].difference_update(zero_set)
-           if len(zero_neighbors[v])==1:
-               new_zero_set.add(zero_neighbors[v].pop())
-               inactive_zero_set.add(v)
-               another_run=True
-               if one_step is True:
-                   return zero_set.union(new_zero_set)
-       if one_step is True and another_run is False:
-           return zero_set
-   return list(zero_set)
-
 from itertools import combinations,chain
 def subsets(s,r=None):
     """ Returns subsets of size r, or if r is None, return nonempty subsets of any size"""
@@ -256,6 +207,57 @@ cp.run('Z_python(graphs.HeawoodGraph(),q=2)',sort='time')
 ##   OLD CODE SUPERSEDED BY THE ABOVE CODE ########################
 ###################################################################
 
+old_code='''
+
+def playzerosgame(graph, initial_set=[], one_step=False):
+   """
+   Apply the color-change rule to a given graph given an optional
+   initial set.
+
+   :param graph: the graph on which to apply the rule
+   :param initial_set: the set of "zero" (black) vertices in the graph
+   
+   :return: the list of zero (black) vertices in the resulting derived
+        coloring
+
+   EXAMPLES:: 
+
+        sage: from sage.graphs.minrank import zerosgame
+        sage: zerosgame(graphs.PathGraph(5))
+        []
+        sage: zerosgame(graphs.PathGraph(5),[0])
+        [0, 1, 2, 3, 4]
+   """
+   new_zero_set=set(initial_set)
+   zero_set=set([])
+   zero_neighbors={}
+   active_zero_set = set([])
+   inactive_zero_set = set([])
+   another_run=True
+   while another_run:
+       another_run=False
+       # Add the new zero vertices
+       zero_set.update(new_zero_set)
+       active_zero_set.update(new_zero_set)
+       active_zero_set.difference_update(inactive_zero_set)
+       zero_neighbors.update([[i, 
+                   set(graph.neighbors(i)).difference(zero_set)] 
+                              for i in new_zero_set])
+       # Find the next set of zero vertices
+       new_zero_set.clear()
+       inactive_zero_set.clear()
+       for v in active_zero_set:
+           zero_neighbors[v].difference_update(zero_set)
+           if len(zero_neighbors[v])==1:
+               new_zero_set.add(zero_neighbors[v].pop())
+               inactive_zero_set.add(v)
+               another_run=True
+               if one_step is True:
+                   return zero_set.union(new_zero_set)
+       if one_step is True and another_run is False:
+           return zero_set
+   return list(zero_set)
+
 def Z_python(G,q,zfs_sets=None):
     n=G.order()
     V=set(G.vertices())
@@ -286,7 +288,7 @@ def Z_python(G,q,zfs_sets=None):
                         new_vertices=Z.union(*K)
                         #if debug: print "Opponent hands back: ",K, "so we have vertices",new_vertices
                         # we don't have to do the empty subset, but it is simpler to just include it
-                        X=set(zerosgame(G.subgraph(new_vertices),initial_set=Z))
+                        X=set(playzerosgame(G.subgraph(new_vertices),initial_set=Z))
                         #if debug: print "X, ZFS on opponent's return: ",X
                         if X not in L:
                             #if debug: print "X not in L"
@@ -319,7 +321,7 @@ def Z_sage(G,q):
     for sizeZ in range(n-2,0,-1):
         #print "Exploring size",sizeZ
         for Z in Subsets(V, sizeZ):
-            W=Set(zerosgame(G,initial_set=Z)) # find right command
+            W=Set(playzerosgame(G,initial_set=Z)) # find right command
             #if debug: print "W",W
             if W in L:
                 #if debug: print "W in L"
@@ -338,7 +340,7 @@ def Z_sage(G,q):
                             continue # ignore the empty set
                         #if debug: print "Opponent hands back: ",K, "so we have vertices",Z+sum([Set(i) for i in K],Set([]))
                         # we don't have to do the empty subset, but it is simpler to just include it
-                        X=Set(zerosgame(G.subgraph(Z+Set(set([]).union(*K))),initial_set=Z))
+                        X=Set(playzerosgame(G.subgraph(Z+Set(set([]).union(*K))),initial_set=Z))
                         #if debug: print "X, ZFS on opponent's return: ",X
                         if X not in L:
                             #if debug: print "X not in L"
@@ -352,3 +354,4 @@ def Z_sage(G,q):
         #print zero_forcing_number, sizeZ
         if zero_forcing_number>sizeZ: # we are done
             return zero_forcing_number, lastZ
+'''
