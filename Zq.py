@@ -202,15 +202,16 @@ G.add_edges([[1,2],[2,3],[3,4],[4,5],[5,6],[6,1],[1,4],[2,5],[3,6],[7,1],[7,2],[
 G2=graphs.CompleteGraph(4)
 G2.subdivide_edges(G2.edges(),1)
 
+from sage.all import points
+def plot_inertia_lower_bound(g):
+   return points(list(Zq_inertia_lower_bound(g)),
+                pointsize=40,gridlines=True,
+                ticks=[range(g.order()),range(g.order())],
+                aspect_ratio=1)
+
 """
-
-point(list(Zq_inertia_lower_bound(G2)),pointsize=40,gridlines=True,aspect_ratio=1)
-
-g=graphs.CompleteBipartiteGraph(3,3)
-point(list(Zq_inertia_lower_bound(g)),pointsize=40,gridlines=True,ticks=[range(g.order()),range(g.order())])
-
 import cProfile as cp
-cp.run('Z_python(graphs.HeawoodGraph(),q=2)',sort='time')
+cp.run('Z_pythonBitset(graphs.HeawoodGraph(),q=2)',sort='time')
 """
 
 ###################################################################
