@@ -355,7 +355,7 @@ def zerosgame(graph, initial_set=[]):
    return list(zero_set)
 
 
-def find_zero_forcing_set(graph, bound=None):
+def zero_forcing_set_bruteforce(graph, bound=None):
    """
    Return a zero forcing set of minimum order that also has order
    less than the given bound.
@@ -370,10 +370,10 @@ def find_zero_forcing_set(graph, bound=None):
 
    EXAMPLES::
 
-      sage: from sage.graphs.minrank import find_zero_forcing_set
-      sage: find_zero_forcing_set(graphs.CompleteGraph(5))
+      sage: from sage.graphs.minrank import zero_forcing_set_bruteforce
+      sage: zero_forcing_set_bruteforce(graphs.CompleteGraph(5))
       {0, 1, 2, 3}
-      sage: find_zero_forcing_set(graphs.CompleteGraph(5),2)
+      sage: zero_forcing_set_bruteforce(graphs.CompleteGraph(5),2)
       False
    """
    from sage.all import Subsets
@@ -407,7 +407,7 @@ def find_Z(graph):
         4      
 
     """
-    return len(find_zero_forcing_set(graph))
+    return len(zero_forcing_set_bruteforce(graph))
 
 
 def has_forbidden_induced_subgraph(graph):
