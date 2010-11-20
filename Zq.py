@@ -191,7 +191,7 @@ def Zq_inertia_lower_bound(G,verbose=False):
     return not_in_inertia
 
 def Zplus(G):
-   return Z(G,q=0)
+   return Z_pythonBitset(G,q=0)
 
 from sage.all import Graph, graphs
 G=Graph()
