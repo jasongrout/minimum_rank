@@ -2,8 +2,8 @@
 """
 Zero forcing
 
-This module implements zero forcing using fast bitsets, automorphisms
-of the graph, and a brute-force approach to trying various bitsets.
+This module implements zero forcing using fast bitsets and a
+brute-force approach to trying various bitsets.
 """
 
 
