@@ -40,20 +40,20 @@ setup(
 
     ext_modules = [
         Extension(
-            "minrank_c", # name of extension
-            ["minrank_c.pyx"], # filename of Cython source
-            include_dirs=include_dirs,
-            ),
-
-        Extension(
-            "Zq_c", # name of extension
-            ["Zq_c.pyx"], # filename of Cython source
+            "zero_forcing_wavefront", # name of extension
+            ["zero_forcing_wavefront.pyx"], # filename of Cython source
             include_dirs=include_dirs,
             ),
 
         Extension(
             "zero_forcing_64", # name of extension
             ["zero_forcing_64.pyx"], # filename of Cython source
+            include_dirs=include_dirs,
+            ),
+
+        Extension(
+            "Zq_c", # name of extension
+            ["Zq_c.pyx"], # filename of Cython source
             include_dirs=include_dirs,
             ),
 

@@ -474,10 +474,9 @@ def has_forbidden_induced_subgraph(graph):
 # so we try importing it if we can.  If we can't import it, then just trust that
 # everything is in the global namespace.
 try:
-    from minrank_c import zero_forcing_set_wavefront
+    from zero_forcing_set_wavefront import zero_forcing_set_wavefront
 except ImportError:
     pass
-
 
 def min_rank_by_bounds(graph, tests = ['precomputed', 'order', 'zero forcing', 'not path', 'forbidden minrank 2', 'not planar', 'not outer planar', 'clique cover', 'diameter']):
     """
