@@ -43,20 +43,26 @@ setup(
             "minrank_c", # name of extension
             ["minrank_c.pyx"], # filename of Cython source
             include_dirs=include_dirs,
-            #language="c++",              # this causes Cython to create C++ source
-            #libraries=["stdc++", ...],             # ditto
-            #extra_link_args=[...],       # if needed
             ),
 
         Extension(
             "Zq_c", # name of extension
             ["Zq_c.pyx"], # filename of Cython source
             include_dirs=include_dirs,
-            #language="c++",              # this causes Cython to create C++ source
-            #libraries=["stdc++", ...],             # ditto
-            #extra_link_args=[...],       # if needed
             ),
 
+        Extension(
+            "zero_forcing_64", # name of extension
+            ["zero_forcing_64.pyx"], # filename of Cython source
+            include_dirs=include_dirs,
+            ),
+
+
+        # Extra options that could be specified in an extension tuple
+        #language="c++",              # this causes Cython to create C++ source
+        #libraries=["stdc++", ...],             # ditto
+        #extra_link_args=[...],       # if needed
+        
         ],
     
     # Standard stuff
