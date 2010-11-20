@@ -83,7 +83,6 @@ def zero_forcing_sets(G=None,neighbors=None):
             return zero_forcing_number, lastZ, L
 
 
-
 def Z_pythonBitset(G,q,zfs_sets=None):
     """
     Assumes the graph has vertices 0,1,2,...,n-1
@@ -109,7 +108,7 @@ def Z_pythonBitset(G,q,zfs_sets=None):
     if zfs_sets is None: 
        zfs_sets=zero_forcing_sets(neighbors=neighbors) 
     else: 
-       zfs_sets=zfs_sets[0], zfs_sets[1], copy(zfs_sets[2]) 
+       zfs_sets=zfs_sets[0], zfs_sets[1], zfs_sets[2].copy() 
     zero_forcing_number, lastZ,L=zfs_sets
 
     #print L
@@ -153,7 +152,6 @@ def Z_pythonBitset(G,q,zfs_sets=None):
             return zero_forcing_number, set(reverse_map[i] for i in lastZ)
 
 
-
 def Zq_inertia_lower_bound(G):
     """
     Run the Zq iteratively until we get a good lower bound.
@@ -168,7 +166,7 @@ def Zq_inertia_lower_bound(G):
     zfs_sets=zero_forcing_sets(G)
     zero_forcing_number=zfs_sets[0]
     compute_Zq=True
-    for q in range(ceil(n/2)):
+    for q in range(n//2+1): # ceil(n/2)
         print "calculating Z%s"%q
         if compute_Zq is True:
             Zq=Z_pythonBitset(G,q,zfs_sets=zfs_sets)[0]
