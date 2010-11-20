@@ -152,7 +152,7 @@ def Z_pythonBitset(G,q,zfs_sets=None):
             return zero_forcing_number, set(reverse_map[i] for i in lastZ)
 
 
-def Zq_inertia_lower_bound(G):
+def Zq_inertia_lower_bound(G,verbose=False):
     """
     Run the Zq iteratively until we get a good lower bound.
     (n-q-Z(G,q)-1,q) and (q,n-q-Z(G,q)-1)is not in the inertia set of G
@@ -167,7 +167,7 @@ def Zq_inertia_lower_bound(G):
     zero_forcing_number=zfs_sets[0]
     compute_Zq=True
     for q in range(n//2+1): # ceil(n/2)
-        print "calculating Z%s"%q
+        if verbose: print "calculating Z%s"%q
         if compute_Zq is True:
             Zq=Z_pythonBitset(G,q,zfs_sets=zfs_sets)[0]
         else:
