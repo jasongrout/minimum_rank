@@ -1,4 +1,0 @@
-Minimum Rank Utilities
-======================
-
-One goal of this library is to be able to be used both by loading the necessary files in the Sage notebook via load statements, as well as installation as a python module in Sage.  Thus, it is important that the names in the separate submodules do not trample on each other (since the load command imports everything at the top level)
