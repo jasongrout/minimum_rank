@@ -30,7 +30,7 @@ include "sage/misc/bitset_pxd.pxi"
 include "sage/misc/bitset.pxi"
 from sage.misc.bitset cimport FrozenBitset, Bitset    
     
-cdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set, bint return_bitset=True):
+cpdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set, bint return_bitset=True):
     """
     Run zero forcing as much as possible
     
@@ -40,6 +40,9 @@ cdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set, 
     :param: filled_set (FrozenBitset) -- the initial filled vertices
     :param: return_bitset (bool) -- if True, return the set of filled vertices after playing the game,
         if False, return a boolean can_push, where can_push is True iff a force could happen.
+        
+        The returned filled set contains all of the initially filled vertices, even if they are outside
+        of the subgraph.
     """
     cdef bitset_s *filled = filled_set._bitset
     cdef bitset_s *subgraph_bitset = subgraph._bitset
@@ -99,7 +102,8 @@ cdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set, 
 
     if return_bitset:
         bitset_complement(ret_bitset, unfilled)
-        bitset_intersection(ret_bitset, subgraph_bitset)
+        bitset_intersection(ret_bitset, ret_bitset, subgraph_bitset)
+        bitset_union(ret_bitset, ret_bitset, filled)
 
     # Free all memory used:
     bitset_free(filled_active)
