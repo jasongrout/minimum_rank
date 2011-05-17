@@ -8,7 +8,7 @@ and a brute-force approach to trying various bitsets.
 
 #######################################################################
 #
-# Copyright (C) 2008 Steve Butler, Jason Grout.
+# Copyright (C) 2011 Steve Butler, Jason Grout.
 #
 #
 # This program is free software: you can redistribute it and/or modify
@@ -28,61 +28,89 @@ and a brute-force approach to trying various bitsets.
 
 include "sage/misc/bitset_pxd.pxi"
 include "sage/misc/bitset.pxi"
-from sage.misc.bitset cimport FrozenBitset, Bitset
-
-cpdef can_push(list neighbors, FrozenBitset subgraph, FrozenBitset filled):
-    """
-    INPUT: an array of neighbors
-    a set of subgraph vertices (we are then assuming we are working on an induced subgraph)
-    a set of filled vertices
+from sage.misc.bitset cimport FrozenBitset, Bitset    
     
-    OUTPUT: True, if a push can happen, plus the new filled set
-    False, if a push can't happen, and a copy of the original filled set
+cdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set, bint return_bitset=True):
     """
-    cdef bitset_s *filled_bitset = filled._bitset
+    Run zero forcing as much as possible
+    
+    INPUT
+    :param: neighbors (list of FrozenBitsets) -- the neighbors of each vertex
+    :param: subgraph (FrozenBitset) -- the subgraph we are forcing on
+    :param: filled_set (FrozenBitset) -- the initial filled vertices
+    :param: return_bitset (bool) -- if True, return the set of filled vertices after playing the game,
+        if False, return a boolean can_push, where can_push is True iff a force could happen.
+    """
+    cdef bitset_s *filled = filled_set._bitset
     cdef bitset_s *subgraph_bitset = subgraph._bitset
-    cdef int num_vertices = filled_bitset.size
-
-    cdef bitset_t unfilled_neighbors
-    bitset_init(unfilled_neighbors, num_vertices)
-
-    cdef bitset_s *current_neighbors
-
-    cdef bint can_push=False
 
     cdef FrozenBitset v
- 
-    # Make a copy of the filled bitset
-    cdef FrozenBitset ret = FrozenBitset(None, capacity=num_vertices)
+    cdef bitset_s *current_neighbors
+    cdef bitset_t unfilled_neighbors
+    cdef bitset_t filled_active
+    cdef bitset_t filled_active_copy
+    cdef bitset_t unfilled # unfilled in the subgraph
+    
+    # Initialize filled_active to the complement of unfilled
+    bitset_init(filled_active, filled.size)
+    bitset_copy(filled_active, filled)
+    
+    bitset_init(unfilled, filled.size)
+    bitset_complement(unfilled, filled)
+    bitset_intersection(unfilled, unfilled, subgraph_bitset)
+
+    bitset_init(filled_active_copy, filled.size)
+    bitset_init(unfilled_neighbors, filled.size)
+    
+    cdef FrozenBitset ret = FrozenBitset(None, capacity=filled.size)
     cdef bitset_s *ret_bitset=ret._bitset
-    bitset_copy(ret_bitset, filled_bitset)
 
-    # Go through each neighborhood.
-    cdef int new_filled
+    cdef int new_filled, n
+    cdef bint done = False
+    cdef bint can_push = False
     
+    while not done:
+        done = True
+        bitset_copy(filled_active_copy, filled_active)
+        n = bitset_first(filled_active_copy)
+        while n>=0:
+            v = neighbors[n]
+            current_neighbors = v._bitset
+            bitset_intersection(unfilled_neighbors, current_neighbors, unfilled)
+            new_filled = bitset_first(unfilled_neighbors)
+            if new_filled < 0:
+                # no unfilled neighbors
+                bitset_discard(filled_active, n)
+            else:
+                # look for second unfilled neighbor
+                if bitset_next(unfilled_neighbors, new_filled+1) < 0:
+                    # No more unfilled neighbors
+                    # push to the new_filled vertex
+                    bitset_add(filled_active, new_filled)
+                    bitset_remove(unfilled, new_filled)
+                    bitset_remove(filled_active, n)
+                    if return_bitset:
+                        done = False
+                    else:
+                        can_push=True
+                        # done is True, so the break leads to breaking out of both while loops
+                        break
+            n = bitset_next(filled_active_copy, n+1)
 
-    cdef int n = bitset_first(filled_bitset)
-    while n>=0:
-        v = neighbors[n]
-        current_neighbors = v._bitset
-        bitset_intersection(unfilled_neighbors, current_neighbors, subgraph_bitset)
-        bitset_difference(unfilled_neighbors, unfilled_neighbors, filled_bitset)
-        new_filled = bitset_first(unfilled_neighbors)
-        if new_filled >= 0:
-            # look for second unfilled neighbor
-            if bitset_next(unfilled_neighbors, new_filled+1) < 0:
-                # No more unfilled neighbors
-                can_push=True
-                break
-        n = bitset_next(filled_bitset, n+1)
+    if return_bitset:
+        bitset_complement(ret_bitset, unfilled)
+        bitset_intersection(ret_bitset, subgraph_bitset)
 
+    # Free all memory used:
+    bitset_free(filled_active)
+    bitset_free(filled_active_copy)
     bitset_free(unfilled_neighbors)
-
-    if can_push:
-        bitset_add(ret_bitset, new_filled)
-    return can_push, ret
+    bitset_free(unfilled)
     
-    
+    if return_bitset:
+        return ret
+    else:
+        return can_push
     
 
 cpdef neighbors_connected_components(list neighbors, FrozenBitset subgraph):
