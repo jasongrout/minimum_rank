@@ -48,6 +48,9 @@ class InertiaSet(object):
 
     def __eq__(self, other):
         return self.generators==other.generators
+    
+    def __contains__(self, p):
+        return any(x[0]<=p[0] and x[1]<=p[1] for x in self.generators)
 
     def plot(self, *args, **kwargs):
         from sage.all import points
