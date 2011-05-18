@@ -82,12 +82,12 @@ def zero_forcing_set_wavefront(matrix):
 
     INPUT:
 
-    a graph
+    a graph or a matrix
 
 
     OUTPUT:
 
-    A zero forcing set as a frozen set
+    The zero forcing number, A zero forcing set as a frozen set, and the number of closures (memory) that were stored.
     
     
     EXAMPLE::
