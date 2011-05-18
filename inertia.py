@@ -1,3 +1,23 @@
+#######################################################################
+#
+# Copyright (C) 2011 Steve Butler, Jason Grout.
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/.
+#######################################################################
+
+
 class InertiaSet(object):
 
     def __init__(self, generators):
@@ -35,5 +55,51 @@ class InertiaSet(object):
         return points(self.generators, *args, **kwargs)
 
 
+import random
+one_one=InertiaSet([(1,1)])
+def inertia_set(g, f):
+    global inertia_cache
+    g6=g.canonical_label().graph6_string()
+    if g6 in inertia_cache:
+        return inertia_cache[g6]
+    components=g.connected_components_subgraphs()
+    I=InertiaSet([(0,0)])
+    for c in components:
+        try:
+            #print I
+            I+=f(c)
+            #print I
+        except ValueError:
+            try:
+                cut_vertex=random.choice(c.blocks_and_cut_vertices()[1])
+            except IndexError:
+                raise ValueError("Can not decompose unknown graph further", c)
+            h=c.copy()
+            h.delete_vertex(cut_vertex)
+            component_inertia=inertia_set(h,f)+one_one
+            component_inertia|=sum((inertia_set(c.subgraph(cc+[cut_vertex]),f) 
+                                               for cc in h.connected_components()), 
+                                   InertiaSet([(0,0)]))
+            I+=component_inertia
+    inertia_cache[g6]=I
+    return I
 
+
+inertia_cache = dict()
+def f(g):
+    global inertia_cache
+    g6=g.canonical_label().graph6_string()
+    if g6 in inertia_cache:
+        return inertia_cache[g6]
+    elif g.order()==1:
+        return InertiaSet([(0,0)])
+    elif g.order()==2 and g.size()==1:
+        return InertiaSet([(0,1)])
+    elif g.degree_sequence()[0]==g.order()-1 and g.degree_sequence()[1]==1:
+        # g is a star
+        return InertiaSet([(1,1), (g.order()-1,0)])
+    
+    raise ValueError("Do not know inertia set")
+
+    
 
