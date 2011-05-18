@@ -28,7 +28,7 @@ brute-force approach to trying various bitsets.
 
 
 try:
-    from Zq_c import can_push, neighbors_connected_components
+    from Zq_c import push_zeros, neighbors_connected_components
 except ImportError:
     # assume everything is in the global space
     # this happens when, for example, someone "load"s the right files
@@ -194,6 +194,18 @@ def Zq_inertia_lower_bound(G,verbose=False):
     return not_in_inertia
 
 
+# if in library mode, we need to import this.
+# if it is just included in a sage notebook, then it is in the global namespace
+# so we try importing it if we can.  If we can't import it, then just trust that
+# everything is in the global namespace.
+try:
+    from zero_forcing_wavefront import zero_forcing_set_wavefront
+    from inertia import InertiaSet
+    from Zq_c import push_zeros
+except ImportError:
+    pass
+
+
 def Zq_inertia_better_lower_bound(G,verbose=False):
     """
     Run the Zq iteratively until we get a good lower bound.
@@ -204,9 +216,8 @@ def Zq_inertia_better_lower_bound(G,verbose=False):
     """
     G=G.relabel(inplace=False)
     n=G.order()
-    not_in_inertia=set()
-    zfs_sets=zero_forcing_sets(G)
-    zero_forcing_number=zfs_sets[0]
+    I = InertiaSet([(G.order(), G.order())])
+    zero_forcing_number=zero_forcing_set_wavefront(G)[0]
     compute_Zq=True
     for q in range(n//2+1): # ceil(n/2)
         if verbose: print "calculating Z%s"%q
@@ -216,21 +227,13 @@ def Zq_inertia_better_lower_bound(G,verbose=False):
             Zq=zero_forcing_number
         if Zq==zero_forcing_number:
             compute_Zq=False
-        if n-q-Zq-1==q:
-            not_in_inertia.update([(n-q-Zq-1,q),(q,n-q-Zq-1)])
-        if n-q-Zq-1<=q:
+        if n-q-Zq==q:
+            #TODO: possibly not needed
+            I|=[(n-q-Zq,q)]
+        if n-q-Zq<=q:
             break
-        not_in_inertia.update([(n-q-Zq-1,q),(q,n-q-Zq-1)])
-    # Find the closure to give a point in each row and each column
-    sorted_boundary=sorted(not_in_inertia,reverse=True)
-    curr_x,curr_y=sorted_boundary[0]    
-    for pt in sorted_boundary[1:]:
-        new_x,new_y=pt
-        if new_x<curr_x-1:
-            not_in_inertia.update([(i,curr_y) for i in range(new_x+1,curr_x)])
-            not_in_inertia.update([(curr_y,i) for i in range(new_x+1,curr_x)])
-        curr_x,curr_y=new_x,new_y
-    return not_in_inertia
+        I|=[(n-q-Zq,q)]
+    return I
 
 
 def Zplus(G):
@@ -245,7 +248,7 @@ G2.subdivide_edges(G2.edges(),1)
 
 from sage.all import points
 def plot_inertia_lower_bound(g):
-   return points(list(Zq_inertia_lower_bound(g)),
+   return plot(Zq_inertia_better_lower_bound(g),
                 pointsize=40,gridlines=True,
                 ticks=[range(g.order()),range(g.order())],
                 aspect_ratio=1)

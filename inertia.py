@@ -34,7 +34,10 @@ class InertiaSet(object):
                                                                          right.generators)])
 
     def union(self, other):
-        return InertiaSet(self.generators.union(other.generators))
+        if isinstance(other, InertiaSet):
+            return InertiaSet(self.generators.union(other.generators))
+        else:
+            return InertiaSet(self.generators.union(other))
     
     __or__=union
 
