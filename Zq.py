@@ -222,7 +222,7 @@ def Zq_inertia_better_lower_bound(G,verbose=False):
     for q in range(n//2+1): # ceil(n/2)
         if verbose: print "calculating Z%s"%q
         if compute_Zq is True:
-            Zq=Z_pythonBitset(G,q)
+            Zq=Z_pythonBitset(G,q, push_zeros=push_zeros)
         else:
             Zq=zero_forcing_number
         if Zq==zero_forcing_number:
@@ -237,7 +237,7 @@ def Zq_inertia_better_lower_bound(G,verbose=False):
 
 
 def Zplus(G):
-   return Z_pythonBitset(G,q=0)
+   return Z_pythonBitset(G,q=0, push_zeros=push_zeros)
 
 from sage.all import Graph, graphs
 G=Graph()
@@ -260,9 +260,16 @@ def plot_inertia_lower_bound(g):
 ######  Better Algorithm
 #################################################################
 
-def Z_pythonBitset(G,q, return_track=False):
+def Z_pythonBitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False):
     """
-    Assumes the graph has vertices 0,1,2,...,n-1
+    Calculate Zq, where you can have arbitrary color rules encoded in a push_zeros function.
+
+    INPUT:
+    :param G: a simple undirected graph
+    :param q: the :math:`q` for the algorithm
+    :param push_zeros: a function with the signature ``push_zeros(neighbors, subgraph, filled_set, return_bitset=False, **kwargs)``, where the extra ``kwargs`` are another parameter.
+    :param push_zeros_kwargs: extra arguments to the push_zeros function
+    :param return_track: (bool) whether to return a sequence of actions that obtain the Zq value.
     """
     G=G.copy()
 
@@ -285,7 +292,8 @@ def Z_pythonBitset(G,q, return_track=False):
     for sizeZ in range(n-1,-1,-1):
         for Z in subsets(V, sizeZ):
             Z=FrozenBitset(Z,capacity=n)
-            if push_zeros(neighbors, subgraph=V, filled_set=Z, return_bitset=False):
+            if push_zeros(neighbors, subgraph=V, filled_set=Z, return_bitset=False,
+                          **push_zeros_kwargs):
                 #print "can push, so skipping", Z
                 continue
             b=n
@@ -307,9 +315,9 @@ def Z_pythonBitset(G,q, return_track=False):
                     for s in K:
                         subgraph.update(FrozenBitset(s))
                     closed_Z=push_zeros(neighbors, subgraph=subgraph, 
-                                filled_set=Z, return_bitset=True)
+                                filled_set=Z, return_bitset=True, **push_zeros_kwargs)
                     closed_Z=push_zeros(neighbors, subgraph=V, 
-                                filled_set=closed_Z, return_bitset=True)
+                                filled_set=closed_Z, return_bitset=True, **push_zeros_kwargs)
                     if cost[closed_Z]>bb:
                         bb=cost[closed_Z] #max(bb,cost[closed_Z])
                         if return_track:
@@ -320,7 +328,8 @@ def Z_pythonBitset(G,q, return_track=False):
                         b_set=bb_set
             for v in V-Z:
                 closed_Z=Z.union(FrozenBitset([v],capacity=n))
-                closed_Z=push_zeros(neighbors, subgraph=V, filled_set=closed_Z, return_bitset=True)
+                closed_Z=push_zeros(neighbors, subgraph=V, filled_set=closed_Z,
+                                    return_bitset=True, **push_zeros_kwargs)
                 if cost[closed_Z]+1<c:
                     c=cost[closed_Z]+1 #min(c, cost[closed_Z]+1)
                     if return_track:
@@ -329,7 +338,7 @@ def Z_pythonBitset(G,q, return_track=False):
             if b<c:
                 cost[Z]=b #min(b,c)
                 if return_track:
-                    track[Z]=('set: hand %s to adversary; adversary hands back %s'%([map(R,i) for i in b_set[0]], [map(R,i) for i in b_set[1]]), b_set[2])
+                    track[Z]=('set: hand %s to adversary; adversary hands back %s, push to get %s'%([map(R,i) for i in b_set[0]], [map(R,i) for i in b_set[1]], map(R,b_set[2])), b_set[2])
             else:
                 cost[Z]=c #min(b,c)
                 if return_track:
@@ -340,13 +349,13 @@ def Z_pythonBitset(G,q, return_track=False):
         while Z!=FrozenBitset(V,capacity=n):
             trail+='%s\n'%(track[Z],)
             Z=track[Z][1]
-        return cost[FrozenBitset([], capacity=n)], trail
+        return cost[push_zeros(neighbors, subgraph=V, 
+                               filled_set=FrozenBitset([], capacity=n), 
+                               return_bitset=True, **push_zeros_kwargs)], trail
     else:
-        return cost[FrozenBitset([], capacity=n)]
-#        if zero_forcing_number>sizeU: # we are done
-#            return zero_forcing_number, set(reverse_map[i] for i in lastZ)
-
-
+        return cost[push_zeros(neighbors, subgraph=V, 
+                               filled_set=FrozenBitset([], capacity=n), 
+                               return_bitset=True, **push_zeros_kwargs)]
 
 
 
