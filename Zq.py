@@ -206,7 +206,7 @@ except ImportError:
     pass
 
 
-def Zq_inertia_better_lower_bound(G,verbose=False):
+def Zq_inertia_lower_bound(G, zero_forcing_function=None, verbose=False):
     """
     Run the Zq iteratively until we get a good lower bound.
     (n-q-Z(G,q)-1,q) and (q,n-q-Z(G,q)-1)is not in the inertia set of G
@@ -214,21 +214,23 @@ def Zq_inertia_better_lower_bound(G,verbose=False):
     
     G is assumed to be connected
     """
+    global Zq
+    if zero_forcing_function is None:
+        zero_forcing_function=Zq
     G=G.relabel(inplace=False)
     n=G.order()
     I = InertiaSet([(G.order(), G.order())])
-    zero_forcing_number=zero_forcing_set_wavefront(G)[0]
+    zero_forcing_number=zero_forcing_function(G,n)
     compute_Zq=True
     for q in range(n//2+1): # ceil(n/2)
         if verbose: print "calculating Z%s"%q
         if compute_Zq is True:
-            Zq=Z_pythonBitset(G,q, push_zeros=push_zeros)
+            Zq=zero_forcing_function(G,q)
         else:
             Zq=zero_forcing_number
         if Zq==zero_forcing_number:
             compute_Zq=False
         if n-q-Zq==q:
-            #TODO: possibly not needed
             I|=[(n-q-Zq,q)]
         if n-q-Zq<=q:
             break
@@ -238,9 +240,9 @@ def Zq_inertia_better_lower_bound(G,verbose=False):
 
 
 from sage.all import points
-def plot_inertia_lower_bound(g):
+def plot_inertia_lower_bound(g, Zq_args={}):
     n=g.order()
-    return plot(Zq_inertia_better_lower_bound(g),
+    return plot(Zq_inertia_lower_bound(g, **Zq_args),
                 pointsize=40,gridlines=True,
                 ticks=[range(n+1),range(n+1)],
                 aspect_ratio=1)+line([(0,n),(n,0)],linestyle=':')
