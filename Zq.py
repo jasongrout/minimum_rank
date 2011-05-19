@@ -172,7 +172,7 @@ def Zq_inertia_lower_bound(G,verbose=False):
     for q in range(n//2+1): # ceil(n/2)
         if verbose: print "calculating Z%s"%q
         if compute_Zq is True:
-            Zq=Z_pythonBitset(G,q,zfs_sets=zfs_sets)[0]
+            Zq=Zq_bitset(G,q,zfs_sets=zfs_sets)[0]
         else:
             Zq=zero_forcing_number
         if Zq==zero_forcing_number:
@@ -236,15 +236,6 @@ def Zq_inertia_better_lower_bound(G,verbose=False):
     return I
 
 
-def Zplus(G):
-   return Z_pythonBitset(G,q=0, push_zeros=push_zeros)
-
-from sage.all import Graph, graphs
-G=Graph()
-G.add_edges([[1,2],[2,3],[3,4],[4,5],[5,6],[6,1],[1,4],[2,5],[3,6],[7,1],[7,2],[7,3]])
-
-G2=graphs.CompleteGraph(4)
-G2.subdivide_edges(G2.edges(),1)
 
 from sage.all import points
 def plot_inertia_lower_bound(g):
@@ -260,7 +251,7 @@ def plot_inertia_lower_bound(g):
 ######  Better Algorithm
 #################################################################
 
-def Z_pythonBitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False):
+def Zq_bitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False):
     """
     Calculate Zq, where you can have arbitrary color rules encoded in a push_zeros function.
 
@@ -375,7 +366,7 @@ def Zqhat_recurse(G,q,looped,unlooped):
     n=G.order()
     marked=looped.union(unlooped)
     #unmarked=~marked
-    Zq=Z_pythonBitset(G,q,push_zeros=push_zeros_looped, 
+    Zq=Zq_bitset(G,q,push_zeros=push_zeros_looped, 
                               push_zeros_kwargs=dict(looped=looped,unlooped=unlooped))
     if len(marked)==n:
         # we are at a leaf and ready to evaluate
@@ -403,7 +394,17 @@ def Zqhat(G, q):
                         FrozenBitset([], capacity=n))
 
 def Zq(G,q):
-    return Z_pythonBitset(G,q,push_zeros=push_zeros)
+    return Zq_bitset(G,q,push_zeros=push_zeros)
+
+def Zplus(G):
+   return Zq(G,0)
+
+from sage.all import Graph, graphs
+G=Graph()
+G.add_edges([[1,2],[2,3],[3,4],[4,5],[5,6],[6,1],[1,4],[2,5],[3,6],[7,1],[7,2],[7,3]])
+
+G2=graphs.CompleteGraph(4)
+G2.subdivide_edges(G2.edges(),1)
 
 """
 import cProfile as cp
