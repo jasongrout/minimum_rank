@@ -248,10 +248,11 @@ G2.subdivide_edges(G2.edges(),1)
 
 from sage.all import points
 def plot_inertia_lower_bound(g):
-   return plot(Zq_inertia_better_lower_bound(g),
+    n=g.order()
+    return plot(Zq_inertia_better_lower_bound(g),
                 pointsize=40,gridlines=True,
-                ticks=[range(g.order()),range(g.order())],
-                aspect_ratio=1)
+                ticks=[range(n+1),range(n+1)],
+                aspect_ratio=1)+line([(0,n),(n,0)],linestyle=':')
 
 
 
