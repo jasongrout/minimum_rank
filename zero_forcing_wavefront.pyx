@@ -4,6 +4,11 @@ include 'sage/ext/interrupt.pxi'
 
 """
 Fast computation of zero forcing sets
+
+TODO: Make a wavefront function for looped vertices:
+  * dying alone vertices are cost zero
+  * "active" vertices are either filled *or* looped
+  * undetermined vertices act as normal zero forcing.
 """
 
 #######################################################################
