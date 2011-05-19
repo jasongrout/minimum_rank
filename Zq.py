@@ -28,7 +28,7 @@ brute-force approach to trying various bitsets.
 
 
 try:
-    from Zq_c import push_zeros, neighbors_connected_components
+    from Zq_c import push_zeros, push_zeros_looped, neighbors_connected_components
 except ImportError:
     # assume everything is in the global space
     # this happens when, for example, someone "load"s the right files
@@ -358,6 +358,52 @@ def Z_pythonBitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False
                                return_bitset=True, **push_zeros_kwargs)]
 
 
+
+def Zqhat_recurse(G,q,looped,unlooped):
+    """
+    If we construct a tree of possibilities of looping and unlooping
+    vertices, where the root of the tree is all vertices unspecified,
+    and the leaves are all possibilities of specifying loops and
+    unloops.  Each node has two children, corresponding to making a
+    fixed vertex looped or unlooped.
+
+    This function returns the maximum Zhat of all leaves.  We know
+    that Zhat decreases as we go down from the root, so if we ever
+    find a leaf that is the same value as a node in the tree, we don't
+    have to explore that subtree any more.
+    """
+    n=G.order()
+    marked=looped.union(unlooped)
+    #unmarked=~marked
+    Zq=Z_pythonBitset(G,q,push_zeros=push_zeros_looped, 
+                              push_zeros_kwargs=dict(looped=looped,unlooped=unlooped))
+    if len(marked)==n:
+        # we are at a leaf and ready to evaluate
+        return Zq
+    else:
+        # we need to choose an unmarked vertex to go further down the branches
+        v=Bitset(Bitset(range(n))-Bitset(marked)).pop()
+        new_looped=looped.union(FrozenBitset([v],capacity=n))
+        add_v_to_looped=Zqhat_recurse(G,q,looped=new_looped, unlooped=unlooped)
+        if add_v_to_looped==Zq:
+            # we do not need to traverse both branches because the other
+            # branch cannot decrease the maximum of the two values
+            return Zq
+        else:
+            # we need to go on the other branch and take the max of
+            # the two branches
+            new_unlooped=unlooped.union(FrozenBitset([v],capacity=n))
+            return max(add_v_to_looped,Zqhat_recurse(G,q,looped=looped,unlooped=new_unlooped))
+
+
+
+def Zqhat(G, q):
+    n=G.order()
+    return Zqhat_recurse(G, q, FrozenBitset([], capacity=n),
+                        FrozenBitset([], capacity=n))
+
+def Zq(G,q):
+    return Z_pythonBitset(G,q,push_zeros=push_zeros)
 
 """
 import cProfile as cp
