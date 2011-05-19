@@ -260,7 +260,7 @@ def plot_inertia_lower_bound(g):
 ######  Better Algorithm
 #################################################################
 
-def Z_pythonBitset(G,q):
+def Z_pythonBitset(G,q, return_track=False):
     """
     Assumes the graph has vertices 0,1,2,...,n-1
     """
@@ -268,6 +268,7 @@ def Z_pythonBitset(G,q):
 
     relabel=G.relabel(return_map=True)
     reverse_map=dict( (v,k) for k,v in relabel.items())
+    R=lambda x: reverse_map[x]
 
     n=G.order()
     V=FrozenBitset(G.vertices(),capacity=n)
@@ -276,6 +277,8 @@ def Z_pythonBitset(G,q):
     if n<2:
         raise ValueError("G needs to have 2 or more vertices")
     cost={V: 0}
+    if return_track: 
+        track={V:'done'}
     
     #print L
     debug=True
@@ -288,6 +291,8 @@ def Z_pythonBitset(G,q):
             b=n
             c=n
             cost[Z]=n
+            if return_track:
+                track[Z]='sentinal'
             H=neighbors_connected_components(neighbors, V.difference(Z))
             #if debug: print "H",H
             #if debug: print "looping through subsets:",list(subsets(H,q+1))
@@ -305,14 +310,39 @@ def Z_pythonBitset(G,q):
                                 filled_set=Z, return_bitset=True)
                     closed_Z=push_zeros(neighbors, subgraph=V, 
                                 filled_set=closed_Z, return_bitset=True)
-                    bb=max(bb, cost[closed_Z])
-                b=min(b,bb)
+                    if cost[closed_Z]>bb:
+                        bb=cost[closed_Z] #max(bb,cost[closed_Z])
+                        if return_track:
+                            bb_set=(J,K,closed_Z)
+                if bb<b:
+                    b=bb #min(b,bb)
+                    if return_track:
+                        b_set=bb_set
             for v in V-Z:
                 closed_Z=Z.union(FrozenBitset([v],capacity=n))
                 closed_Z=push_zeros(neighbors, subgraph=V, filled_set=closed_Z, return_bitset=True)
-                c=min(c, cost[closed_Z]+1)
-            cost[Z]=min(b,c)
-    return cost[FrozenBitset([], capacity=n)]
+                if cost[closed_Z]+1<c:
+                    c=cost[closed_Z]+1 #min(c, cost[closed_Z]+1)
+                    if return_track:
+                        c_vertex=v
+                        c_closed=closed_Z
+            if b<c:
+                cost[Z]=b #min(b,c)
+                if return_track:
+                    track[Z]=('set: hand %s to adversary; adversary hands back %s'%([map(R,i) for i in b_set[0]], [map(R,i) for i in b_set[1]]), b_set[2])
+            else:
+                cost[Z]=c #min(b,c)
+                if return_track:
+                    track[Z]=('spend vertex %s, get %s'%(reverse_map[c_vertex],map(R,c_closed)), c_closed)
+    if return_track:
+        trail=''
+        Z=FrozenBitset([], capacity=n)
+        while Z!=FrozenBitset(V,capacity=n):
+            trail+='%s\n'%(track[Z],)
+            Z=track[Z][1]
+        return cost[FrozenBitset([], capacity=n)], trail
+    else:
+        return cost[FrozenBitset([], capacity=n)]
 #        if zero_forcing_number>sizeU: # we are done
 #            return zero_forcing_number, set(reverse_map[i] for i in lastZ)
 
