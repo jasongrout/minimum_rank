@@ -199,7 +199,7 @@ cpdef push_zeros_looped(list neighbors, FrozenBitset subgraph, FrozenBitset fill
         else:
             # only executed if we didn't break from the while n>=0 loop
             # Check to see if any looped vertex can die alone
-            bitset_intersection(can_die_alone, unfilled, looped)
+            bitset_intersection(can_die_alone, unfilled, looped_bitset)
             n = bitset_first(can_die_alone)
             while n>=0:
                 v = neighbors[n]
