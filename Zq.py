@@ -419,6 +419,20 @@ G.add_edges([[1,2],[2,3],[3,4],[4,5],[5,6],[6,1],[1,4],[2,5],[3,6],[7,1],[7,2],[
 G2=graphs.CompleteGraph(4)
 G2.subdivide_edges(G2.edges(),1)
 
+
+def check_trees(start,end):
+    for i in range(start,end):
+        print "working on %s vertices"%i
+        list(check_tree(list(graphs.trees(i))))
+
+@parallel            
+def check_tree(g):
+    if not inertia_set(g,f)==Zq_inertia_lower_bound(g):
+        if not inertia_set(g,f)==Zq_inertia_lower_bound(g, zero_forcing_function=Zqhat):
+            print '\n%s'%g.graph6_string()
+    return None
+    
+
 """
 import cProfile as cp
 cp.run('Z_pythonBitset(graphs.HeawoodGraph(),q=2)',sort='time')
