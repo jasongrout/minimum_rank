@@ -214,9 +214,9 @@ def Zq_inertia_lower_bound(G, zero_forcing_function=None, verbose=False):
     
     G is assumed to be connected
     """
-    global Zq
+    global Zq_compute
     if zero_forcing_function is None:
-        zero_forcing_function=Zq
+        zero_forcing_function=Zq_compute
     G=G.relabel(inplace=False)
     n=G.order()
     I = InertiaSet([(G.order(), G.order())])
@@ -408,7 +408,7 @@ def Zqhat(G, q):
                   FrozenBitset([], capacity=n), BEST_LOWER_BOUND=BEST_LOWER_BOUND)
     return BEST_LOWER_BOUND[0]
 
-def Zq(G,q):
+def Zq_compute(G,q):
     return Zq_bitset(G,q,push_zeros=push_zeros)
 
 def Zplus(G):
