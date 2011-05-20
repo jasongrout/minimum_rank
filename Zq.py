@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Zero forcing
-
-This module implements zero forcing using fast bitsets and a
-brute-force approach to trying various bitsets.
-"""
-
 
 #######################################################################
 #

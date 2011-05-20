@@ -34,14 +34,13 @@ cpdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set,
     """
     Run zero forcing as much as possible
     
-    INPUT
-    :param: neighbors (list of FrozenBitsets) -- the neighbors of each vertex
-    :param: subgraph (FrozenBitset) -- the subgraph we are forcing on
-    :param: filled_set (FrozenBitset) -- the initial filled vertices
-    :param: return_bitset (bool) -- if True, return the set of filled vertices after playing the game,
+    :param neighbors: (list of FrozenBitsets) -- the neighbors of each vertex
+    :param subgraph: (FrozenBitset) -- the subgraph we are forcing on
+    :param filled_set: (FrozenBitset) -- the initial filled vertices
+    :param return_bitset: (bool) -- if True, return the set of filled vertices after playing the game,
         if False, return a boolean can_push, where can_push is True iff a force could happen.
         
-        The returned filled set contains all of the initially filled vertices, even if they are outside
+    :returns: The returned filled set contains all of the initially filled vertices, even if they are outside
         of the subgraph.
     """
     cdef bitset_s *filled = filled_set._bitset
@@ -121,13 +120,12 @@ cpdef push_zeros_looped(list neighbors, FrozenBitset subgraph, FrozenBitset fill
     """
     Run loop zero forcing as much as possible.  Vertices that are not in the looped or unlooped sets are undetermined, so we should not apply the extra loop rules to those vertices.
     
-    INPUT
-    :param: neighbors (list of FrozenBitsets) -- the neighbors of each vertex
-    :param: subgraph (FrozenBitset) -- the subgraph we are forcing on
-    :param: filled_set (FrozenBitset) -- the initial filled vertices
-    :param: looped (FrozenBitset) -- the vertices that are looped
-    :param: unlooped (FrozenBitset) -- the vertices that are not looped
-    :param: return_bitset (bool) -- if True, return the set of filled vertices after playing the game,
+    :param neighbors: (list of FrozenBitsets) -- the neighbors of each vertex
+    :param subgraph: (FrozenBitset) -- the subgraph we are forcing on
+    :param filled_set: (FrozenBitset) -- the initial filled vertices
+    :param looped: (FrozenBitset) -- the vertices that are looped
+    :param unlooped: (FrozenBitset) -- the vertices that are not looped
+    :param return_bitset: (bool) -- if True, return the set of filled vertices after playing the game,
         if False, return a boolean can_push, where can_push is True iff a force could happen.
         
         The returned filled set contains all of the initially filled vertices, even if they are outside

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Minimum rank
+A collection of bounds for minimum rank
 
 This module implements a collection of bounds for minimum rank, plus a
 driver function to apply each of these in turn to a graph.
