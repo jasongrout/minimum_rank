@@ -365,19 +365,17 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND):
     find a leaf that is the same value as a node in the tree, we don't
     have to explore that subtree any more.
 
-    Lower bound is 
     """
     n=G.order()
     marked=looped.union(unlooped)
-    #unmarked=~marked
     Zq=Zq_bitset(G,q,push_zeros=push_zeros_looped, 
                               push_zeros_kwargs=dict(looped=looped,unlooped=unlooped))
     if Zq<=BEST_LOWER_BOUND[0]:
-        return #BEST_LOWER_BOUND[0]
+        return
     if len(marked)==n:
         # we are at a leaf and ready to evaluate
         BEST_LOWER_BOUND[0]=Zq
-        return #Zq
+        return
     else:
         # we need to choose an unmarked vertex to go further down the branches
         v=Bitset(Bitset(range(n))-Bitset(marked)).pop()
@@ -386,7 +384,7 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND):
         Zqhat_recurse(G,q,looped=new_looped, unlooped=unlooped, BEST_LOWER_BOUND=BEST_LOWER_BOUND)
         
         if Zq<=BEST_LOWER_BOUND[0]:
-            return #BEST_LOWER_BOUND[0]
+            return
         new_unlooped=unlooped.union(FrozenBitset([v],capacity=n))
         Zqhat_recurse(G,q,looped=looped,unlooped=new_unlooped, BEST_LOWER_BOUND=BEST_LOWER_BOUND)
         return
