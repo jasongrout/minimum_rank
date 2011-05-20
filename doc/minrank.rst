@@ -1,0 +1,4 @@
+Minimum Rank
+============
+
+.. automodule:: minrank

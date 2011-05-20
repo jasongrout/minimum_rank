@@ -1,0 +1,4 @@
+Inertia
+=======
+
+.. automodule:: inertia
