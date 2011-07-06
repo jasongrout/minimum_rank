@@ -355,18 +355,19 @@ def zerosgame(graph, initial_set=[]):
    return list(zero_set)
 
 
-def zero_forcing_set_bruteforce(graph, bound=None):
+def zero_forcing_set_bruteforce(graph, bound=None, all_sets=False):
    """
    Return a zero forcing set of minimum order that also has order
    less than the given bound.
     
    :param graph: the graph on which to find the zero-forcing set
-   :param bound: the maximum acceptable order for a zero-forcing set
-   :type bound: integer
+   :param int bound: the maximum acceptable order for a zero-forcing set
+   :param bool all_sets: whether to return all zero forcing sets 
+       or just the first one
 
-   :return: a zero-forcing set of minimum order that also has order
-      less than the bound if one exists; False if no such zero-forcing
-      set can be found
+   :return: a zero-forcing set (or list of all zero-forcing sets if all_sets is True)
+      of minimum order that also has order less than the bound if one exists; 
+      False if no such zero-forcing set can be found.
 
    EXAMPLES::
 
@@ -375,6 +376,8 @@ def zero_forcing_set_bruteforce(graph, bound=None):
       {0, 1, 2, 3}
       sage: zero_forcing_set_bruteforce(graphs.CompleteGraph(5),2)
       False
+      sage: zero-forcing_set_bruteforce(graphs.CompleteGraph(5), all_sets=True)
+      [{0, 1, 2, 3}, {0, 1, 2, 4}, {0, 1, 3, 4}, {0, 2, 3, 4}, {1, 2, 3, 4}]
    """
    from sage.all import Subsets
    order=graph.order()
@@ -382,14 +385,25 @@ def zero_forcing_set_bruteforce(graph, bound=None):
        bound = order
    if bound<0:
        bound=1
+   found_zfs=False
+   zfs_sets=[]
    vertices=graph.vertices()
    mindegree=min(graph.degree())
    for i in range(mindegree,bound+1):
+       if found_zfs:
+           break
        for subset in Subsets(vertices,i):
            outcome=zerosgame(graph,subset)
            if len(outcome)==order:
-               return subset
-   return False
+               if all_sets:
+                   found_zfs=True
+                   zfs_sets.append(subset)
+               else:
+                   return subset
+   if found_zfs:
+       return zfs_sets
+   else:
+       return False
 
 
 def find_Z(graph):
