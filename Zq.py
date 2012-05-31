@@ -403,7 +403,7 @@ def Zq_compute(G,q):
     return Zq_bitset(G,q,push_zeros=push_zeros)
 
 def Zplus(G):
-   return Zq(G,0)
+   return Zq_compute(G,0)
 
 from sage.all import Graph, graphs
 G=Graph()
