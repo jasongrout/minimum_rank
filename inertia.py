@@ -77,7 +77,7 @@ class InertiaSet(object):
             max_tick=max(i[0] for i in self.generators)
         defaults=dict(pointsize=70,gridlines=True,
                 ticks=[range(max_tick+1),range(max_tick+1)],
-                aspect_ratio=1, xmin=0, ymin=0)
+                aspect_ratio=1, xmin=0, ymin=0, frame=True, axes=False)
         defaults.update(kwargs)
         return points(p, *args, **defaults)
 
