@@ -20,24 +20,34 @@
 
 class InertiaSet(object):
 
-    def __init__(self, generators):
+    def __init__(self, generators, size=None):
+        """
+        Generators is the minimal (southwest) elements of the inertia
+
+        size is an optional parameter giving the size of the matrix
+
+        If size is given, the entire inertia set is plotted.  Otherwise just the generators are plotted.
+        """
         self.generators=set(generators)
         self.generators.update([(y,x) for x,y in self.generators])
         self.reduce()
+        self.size=size
 
     def __add__(self, right):
         """
         Minkowski sum of self and right
         """
         from itertools import product
+        size=self.size or right.size
         return InertiaSet([(r1+r2, s1+s2) for ((r1,s1),(r2,s2)) in product(self.generators,
-                                                                         right.generators)])
+                                                                         right.generators)],
+            size=self.size or right.size)
 
     def union(self, other):
         if isinstance(other, InertiaSet):
-            return InertiaSet(self.generators.union(other.generators))
+            return InertiaSet(self.generators.union(other.generators), size=self.size or other.size)
         else:
-            return InertiaSet(self.generators.union(other))
+            return InertiaSet(self.generators.union(other), size=self.size or other.size)
     
     __or__=union
 
@@ -51,20 +61,25 @@ class InertiaSet(object):
 
     def __eq__(self, other):
         # assume that both InertiaSets are reduced.
-        return self.generators==other.generators
-    
+        return self.generators==other.generators and self.size==other.size
+
     def __contains__(self, p):
         return any(x[0]<=p[0] and x[1]<=p[1] for x in self.generators)
 
     def plot(self, *args, **kwargs):
         from sage.all import points
-        max_tick=max(i[0] for i in self.generators)
+        p = set(self.generators)
+        if self.size:
+            for x,y in self.generators:
+                p.update(*[[(i,j) for i in range(x,self.size-j+1)] for j in range(y,self.size-x+1)])
+            max_tick=self.size
+        else:
+            max_tick=max(i[0] for i in self.generators)
         defaults=dict(pointsize=70,gridlines=True,
                 ticks=[range(max_tick+1),range(max_tick+1)],
-                aspect_ratio=1)
+                aspect_ratio=1, xmin=0, ymin=0)
         defaults.update(kwargs)
-        return points(self.generators, *args, **defaults)
-
+        return points(p, *args, **defaults)
 
 import random
 one_one=InertiaSet([(1,1)])
@@ -74,7 +89,7 @@ def inertia_set(g, f):
     if g6 in inertia_cache:
         return inertia_cache[g6]
     components=g.connected_components_subgraphs()
-    I=InertiaSet([(0,0)])
+    I=InertiaSet([(0,0)], size=g.order())
     for c in components:
         try:
             #print I
@@ -103,12 +118,12 @@ def f(g):
     if g6 in inertia_cache:
         return inertia_cache[g6]
     elif g.order()==1:
-        return InertiaSet([(0,0)])
+        return InertiaSet([(0,0)], size=g.order())
     elif g.order()==2 and g.size()==1:
-        return InertiaSet([(0,1)])
+        return InertiaSet([(0,1)], size=g.order())
     elif g.degree_sequence()[0]==g.order()-1 and g.degree_sequence()[1]==1:
         # g is a star
-        return InertiaSet([(1,1), (g.order()-1,0)])
+        return InertiaSet([(1,1), (g.order()-1,0)], size=g.order())
     
     raise ValueError("Do not know inertia set")
 
