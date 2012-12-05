@@ -47,7 +47,7 @@ class InertiaSet(object):
         if isinstance(other, InertiaSet):
             return InertiaSet(self.generators.union(other.generators), size=self.size or other.size)
         else:
-            return InertiaSet(self.generators.union(other), size=self.size or other.size)
+            return InertiaSet(self.generators.union(other), size=self.size)
     
     __or__=union
 
