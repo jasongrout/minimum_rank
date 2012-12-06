@@ -345,59 +345,102 @@ def Zq_bitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False):
 
 
 
-def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND):
+def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS=False):
     """
-    If we construct a tree of possibilities of looping and unlooping
+    We construct a tree of possibilities of looping and unlooping
     vertices, where the root of the tree is all vertices unspecified,
     and the leaves are all possibilities of specifying loops and
     unloops.  Each node has two children, corresponding to making a
     fixed vertex looped or unlooped.
 
-    This function returns the maximum Zhat of all leaves.  We know
-    that Zhat decreases as we go down from the root, so if we ever
+    This function returns the maximum Zqhat of all leaves.  We know
+    that Zqhat decreases as we go down from the root (a looped/unlooped vertex has more
+    options to force than an unspecified vertex), so if we ever
     find a leaf that is the same value as a node in the tree, we don't
     have to explore that subtree any more.
+
+    BEST_LOWER_BOUND holds the global maximum lower bound for Zqhat.  If a node's Zq
+    is lower than this, then we have no hope of increasing the best lower bound, so we
+    shortcut return.
+
+    BEST_LOOPS is a list (in which case we will fill it with the loopsets that give us the lower bound)
+    or it is False, in which case we can shortcut operations even more to run faster.
 
     """
     n=G.order()
     marked=looped.union(unlooped)
+    # Zq = how many vertices is Black forced to use
     Zq=Zq_bitset(G,q,push_zeros=push_zeros_looped, 
                               push_zeros_kwargs=dict(looped=looped,unlooped=unlooped))
-    if Zq<=BEST_LOWER_BOUND[0]:
+
+    if Zq<BEST_LOWER_BOUND[0]:
+        # Some leaf in another branch of the tree is already doing better than this entire branch
+        # could possibly do, so prune here.
+        return
+    elif BEST_LOOPS is False and Zq==BEST_LOWER_BOUND[0]:
+        # if we don't care about calculating the best loops, then we can shortcut even equality
+        # since we only care about improving the bound
         return
     if len(marked)==n:
         # we are at a leaf and ready to evaluate
-        BEST_LOWER_BOUND[0]=Zq
+        # Furthermore, because of the above, we know we have a better (or equal if BEST_LOOPS is a list)
+        # BEST_LOWER_BOUND than we have found so far, so store it.
+        if BEST_LOOPS is not False:
+            if Zq == BEST_LOWER_BOUND[0]:
+                BEST_LOOPS.append(dict(looped=looped, unlooped=unlooped))
+            else:
+                BEST_LOWER_BOUND[0]=Zq
+                BEST_LOOPS[:] = [dict(looped=looped, unlooped=unlooped)]
+        else:
+            # We must have a better bound
+            BEST_LOWER_BOUND[0]=Zq
         return
     else:
         # we need to choose an unmarked vertex to go further down the branches
         v=Bitset(Bitset(range(n))-Bitset(marked)).pop()
+
         new_looped=looped.union(FrozenBitset([v],capacity=n))
-        # updates BEST_LOWER_BOUND
-        Zqhat_recurse(G,q,looped=new_looped, unlooped=unlooped, BEST_LOWER_BOUND=BEST_LOWER_BOUND)
-        
-        if Zq<=BEST_LOWER_BOUND[0]:
+        Zqhat_recurse(G,q,looped=new_looped, unlooped=unlooped,
+                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS)
+
+        if BEST_LOOPS is False and Zq<=BEST_LOWER_BOUND[0]:
+            # We've done as good as we possibly can on this branch,
+            # and we don't care about exploring everything, so shortcut and return
             return
+
         new_unlooped=unlooped.union(FrozenBitset([v],capacity=n))
-        Zqhat_recurse(G,q,looped=looped,unlooped=new_unlooped, BEST_LOWER_BOUND=BEST_LOWER_BOUND)
+        Zqhat_recurse(G,q,looped=looped,unlooped=new_unlooped,
+                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS)
         return
 
-def Zqhat(G, q):
+def Zqhat(G, q, return_loops=False):
     n=G.order()
     full_set=FrozenBitset(range(n))
     empty_set=FrozenBitset([],capacity=n)
-    # calculate a few graphs to get a trivial lower bound for Zqhat
-    lower_bound=max(Zq_bitset(G,q,push_zeros=push_zeros_looped, 
-                              push_zeros_kwargs=dict(looped=full_set,unlooped=empty_set)),
-                    Zq_bitset(G,q,push_zeros=push_zeros_looped, 
-                              push_zeros_kwargs=dict(looped=empty_set,unlooped=full_set)))
-    # this is a list so that the recursive calls can change this
-    # variable.  In a sense, this is a global variable for the Zqhat
+    # calculate Zqhat for a few loopsets to get a trivial lower bound for Zqhat
+    # BEST_* are mutable lists so that the recursive calls can change these
+    # variables.  In a sense, this is a global variable for the Zqhat
     # recursive calls.
-    BEST_LOWER_BOUND=[lower_bound]
+    BEST_LOWER_BOUND = [0]
+    if return_loops:
+	BEST_LOOPS = []
+    else:
+        BEST_LOOPS = False
+    for loopset in [dict(looped=full_set,unlooped=empty_set), dict(looped=empty_set,unlooped=full_set)]:
+        Zq = Zq_bitset(G,q,push_zeros=push_zeros_looped,
+                       push_zeros_kwargs=loopset)
+        if Zq < BEST_LOWER_BOUND[0]:
+            BEST_LOWER_BOUND[0] = Zq
+            if BEST_LOOPS is not False:
+                BEST_LOOPS[:] = [loopset]
+        elif BEST_LOOPS is not False and Zq == BEST_LOWER_BOUND[0]:
+            BEST_LOOPS.append(loopset)
     Zqhat_recurse(G, q, FrozenBitset([], capacity=n),
-                  FrozenBitset([], capacity=n), BEST_LOWER_BOUND=BEST_LOWER_BOUND)
-    return BEST_LOWER_BOUND[0]
+                  FrozenBitset([], capacity=n), BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS)
+    if return_loops:
+        return BEST_LOWER_BOUND[0], BEST_LOOPS
+    else:
+        return BEST_LOWER_BOUND[0]
 
 def Zq_compute(G,q):
     return Zq_bitset(G,q,push_zeros=push_zeros)
