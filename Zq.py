@@ -345,7 +345,7 @@ def Zq_bitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False):
 
 
 
-def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS=False):
+def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS, CACHE):
     """
     We construct a tree of possibilities of looping and unlooping
     vertices, where the root of the tree is all vertices unspecified,
@@ -368,7 +368,16 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS=False):
 
     """
     n=G.order()
-    marked=looped.union(unlooped)
+    unmarked = Bitset(range(n))-looped-unlooped
+
+    canonical_label = (G.canonical_label(partition=[list(looped), list(unlooped), list(unmarked)]).graph6_string(), len(looped), len(unlooped))
+    if canonical_label in CACHE:
+        # already investigated this node (up to permutation respecting loops)
+        #print "skipping looped: %s, unlooped %s"%(looped, unlooped)
+        return
+    else:
+        CACHE.add(canonical_label)
+
     # Zq = how many vertices is Black forced to use
     Zq=Zq_bitset(G,q,push_zeros=push_zeros_looped, 
                               push_zeros_kwargs=dict(looped=looped,unlooped=unlooped))
@@ -381,7 +390,8 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS=False):
         # if we don't care about calculating the best loops, then we can shortcut even equality
         # since we only care about improving the bound
         return
-    if len(marked)==n:
+
+    if len(unmarked)==0:
         # we are at a leaf and ready to evaluate
         # Furthermore, because of the above, we know we have a better (or equal if BEST_LOOPS is a list)
         # BEST_LOWER_BOUND than we have found so far, so store it.
@@ -397,11 +407,12 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS=False):
         return
     else:
         # we need to choose an unmarked vertex to go further down the branches
-        v=Bitset(Bitset(range(n))-Bitset(marked)).pop()
+        v=unmarked.pop()
 
         new_looped=looped.union(FrozenBitset([v],capacity=n))
         Zqhat_recurse(G,q,looped=new_looped, unlooped=unlooped,
-                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS)
+                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=CACHE)
+
 
         if BEST_LOOPS is False and Zq<=BEST_LOWER_BOUND[0]:
             # We've done as good as we possibly can on this branch,
@@ -410,7 +421,7 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS=False):
 
         new_unlooped=unlooped.union(FrozenBitset([v],capacity=n))
         Zqhat_recurse(G,q,looped=looped,unlooped=new_unlooped,
-                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS)
+                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=CACHE)
         return
 
 def Zqhat(G, q, return_loops=False):
@@ -436,7 +447,7 @@ def Zqhat(G, q, return_loops=False):
         elif BEST_LOOPS is not False and Zq == BEST_LOWER_BOUND[0]:
             BEST_LOOPS.append(loopset)
     Zqhat_recurse(G, q, FrozenBitset([], capacity=n),
-                  FrozenBitset([], capacity=n), BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS)
+                  FrozenBitset([], capacity=n), BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=set())
     if return_loops:
         return BEST_LOWER_BOUND[0], BEST_LOOPS
     else:
