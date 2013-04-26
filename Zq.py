@@ -246,6 +246,24 @@ def plot_inertia_lower_bound(g, Zq_args={}):
 ######  Better Algorithm
 #################################################################
 
+
+def Zq_graph_info(G):
+    """
+    Extract (and cache) necessary graph information for the Zq_bitset function.
+
+    We've separated this out so that this busy work can be easily cached.
+    """
+    G=G.copy()
+
+    relabel=G.relabel(return_map=True)
+    reverse_map=dict( (v,k) for k,v in relabel.items())
+    R=lambda x: reverse_map[x]
+
+    n=G.order()
+    V=FrozenBitset(G.vertices(),capacity=n)
+    neighbors=[FrozenBitset(G.neighbors(i),capacity=n) for i in range(n)]
+    return reverse_map, R, n, V, neighbors
+
 def Zq_bitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False):
     """
     Calculate Zq, where you can have arbitrary color rules encoded in a push_zeros function.
@@ -257,15 +275,10 @@ def Zq_bitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False):
     :param push_zeros_kwargs: extra arguments to the push_zeros function
     :param return_track: (bool) whether to return a sequence of actions that obtain the Zq value.
     """
-    G=G.copy()
-
-    relabel=G.relabel(return_map=True)
-    reverse_map=dict( (v,k) for k,v in relabel.items())
-    R=lambda x: reverse_map[x]
-
-    n=G.order()
-    V=FrozenBitset(G.vertices(),capacity=n)
-    neighbors=[FrozenBitset(G.neighbors(i),capacity=n) for i in range(n)]
+    # We aggressively cache the graph information
+    if not isinstance(G, tuple):
+        G = Zq_graph_info(G)
+    reverse_map, R, n, V, neighbors = G
     # TODO: Why is this important?
     if n<2:
         raise ValueError("G needs to have 2 or more vertices")
@@ -345,7 +358,7 @@ def Zq_bitset(G,q, push_zeros, push_zeros_kwargs=dict(), return_track=False):
 
 
 
-def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS, CACHE):
+def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS, CACHE, G_info):
     """
     We construct a tree of possibilities of looping and unlooping
     vertices, where the root of the tree is all vertices unspecified,
@@ -379,8 +392,8 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS, CACHE):
         CACHE.add(canonical_label)
 
     # Zq = how many vertices is Black forced to use
-    Zq=Zq_bitset(G,q,push_zeros=push_zeros_looped, 
-                              push_zeros_kwargs=dict(looped=looped,unlooped=unlooped))
+    Zq=Zq_bitset(G_info,q,push_zeros=push_zeros_looped, 
+                 push_zeros_kwargs=dict(looped=looped,unlooped=unlooped))
 
     if Zq<BEST_LOWER_BOUND[0]:
         # Some leaf in another branch of the tree is already doing better than this entire branch
@@ -411,7 +424,7 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS, CACHE):
 
         new_looped=looped.union(FrozenBitset([v],capacity=n))
         Zqhat_recurse(G,q,looped=new_looped, unlooped=unlooped,
-                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=CACHE)
+                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=CACHE, G_info=G_info)
 
 
         if BEST_LOOPS is False and Zq<=BEST_LOWER_BOUND[0]:
@@ -421,7 +434,7 @@ def Zqhat_recurse(G,q,looped,unlooped, BEST_LOWER_BOUND, BEST_LOOPS, CACHE):
 
         new_unlooped=unlooped.union(FrozenBitset([v],capacity=n))
         Zqhat_recurse(G,q,looped=looped,unlooped=new_unlooped,
-                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=CACHE)
+                      BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=CACHE, G_info=G_info)
         return
 
 def Zqhat(G, q, return_loops=False):
@@ -437,8 +450,9 @@ def Zqhat(G, q, return_loops=False):
 	BEST_LOOPS = []
     else:
         BEST_LOOPS = False
+    G_info = Zq_graph_info(G)
     for loopset in [dict(looped=full_set,unlooped=empty_set), dict(looped=empty_set,unlooped=full_set)]:
-        Zq = Zq_bitset(G,q,push_zeros=push_zeros_looped,
+        Zq = Zq_bitset(G_info,q,push_zeros=push_zeros_looped,
                        push_zeros_kwargs=loopset)
         if Zq < BEST_LOWER_BOUND[0]:
             BEST_LOWER_BOUND[0] = Zq
@@ -446,8 +460,9 @@ def Zqhat(G, q, return_loops=False):
                 BEST_LOOPS[:] = [loopset]
         elif BEST_LOOPS is not False and Zq == BEST_LOWER_BOUND[0]:
             BEST_LOOPS.append(loopset)
+
     Zqhat_recurse(G, q, FrozenBitset([], capacity=n),
-                  FrozenBitset([], capacity=n), BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=set())
+                  FrozenBitset([], capacity=n), BEST_LOWER_BOUND=BEST_LOWER_BOUND, BEST_LOOPS=BEST_LOOPS, CACHE=set(), G_info=G_info)
     if return_loops:
         return BEST_LOWER_BOUND[0], BEST_LOOPS
     else:
