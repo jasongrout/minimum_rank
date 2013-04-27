@@ -43,8 +43,8 @@ cpdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set,
     :returns: The returned filled set contains all of the initially filled vertices, even if they are outside
         of the subgraph.
     """
-    cdef bitset_s *filled = filled_set._bitset
-    cdef bitset_s *subgraph_bitset = subgraph._bitset
+    cdef bitset_s *filled = &filled_set._bitset[0]
+    cdef bitset_s *subgraph_bitset = &subgraph._bitset[0]
 
     cdef FrozenBitset v
     cdef bitset_s *current_neighbors
@@ -65,7 +65,7 @@ cpdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set,
     bitset_init(unfilled_neighbors, filled.size)
     
     cdef FrozenBitset ret = FrozenBitset(None, capacity=filled.size)
-    cdef bitset_s *ret_bitset=ret._bitset
+    cdef bitset_s *ret_bitset=&ret._bitset[0]
 
     cdef int new_filled, n
     cdef bint done = False
@@ -77,7 +77,7 @@ cpdef push_zeros(list neighbors, FrozenBitset subgraph, FrozenBitset filled_set,
         n = bitset_first(filled_active_copy)
         while n>=0:
             v = neighbors[n]
-            current_neighbors = v._bitset
+            current_neighbors = &v._bitset[0]
             bitset_intersection(unfilled_neighbors, current_neighbors, unfilled)
             new_filled = bitset_first(unfilled_neighbors)
             if new_filled < 0:
@@ -131,10 +131,10 @@ cpdef push_zeros_looped(list neighbors, FrozenBitset subgraph, FrozenBitset fill
         The returned filled set contains all of the initially filled vertices, even if they are outside
         of the subgraph.
     """
-    cdef bitset_s *filled = filled_set._bitset
-    cdef bitset_s *subgraph_bitset = subgraph._bitset
-    cdef bitset_s *unlooped_bitset = unlooped._bitset
-    cdef bitset_s *looped_bitset = looped._bitset
+    cdef bitset_s *filled = &filled_set._bitset[0]
+    cdef bitset_s *subgraph_bitset = &subgraph._bitset[0]
+    cdef bitset_s *unlooped_bitset = &unlooped._bitset[0]
+    cdef bitset_s *looped_bitset = &looped._bitset[0]
 
     cdef FrozenBitset v
     cdef bitset_s *current_neighbors
@@ -160,7 +160,7 @@ cpdef push_zeros_looped(list neighbors, FrozenBitset subgraph, FrozenBitset fill
     bitset_init(can_die_alone, filled.size)
     
     cdef FrozenBitset ret = FrozenBitset(None, capacity=filled.size)
-    cdef bitset_s *ret_bitset=ret._bitset
+    cdef bitset_s *ret_bitset=&ret._bitset[0]
 
     cdef int first_unfilled_neighbor, n
     cdef bint done = False
@@ -172,7 +172,7 @@ cpdef push_zeros_looped(list neighbors, FrozenBitset subgraph, FrozenBitset fill
         n = bitset_first(active_copy)
         while n>=0:
             v = neighbors[n]
-            current_neighbors = v._bitset
+            current_neighbors = &v._bitset[0]
             bitset_intersection(unfilled_neighbors, current_neighbors, unfilled)
             first_unfilled_neighbor = bitset_first(unfilled_neighbors)
             if first_unfilled_neighbor < 0:
@@ -201,7 +201,7 @@ cpdef push_zeros_looped(list neighbors, FrozenBitset subgraph, FrozenBitset fill
             n = bitset_first(can_die_alone)
             while n>=0:
                 v = neighbors[n]
-                current_neighbors = v._bitset
+                current_neighbors = &v._bitset[0]
                 bitset_intersection(unfilled_neighbors, current_neighbors, unfilled)
                 first_unfilled_neighbor = bitset_first(unfilled_neighbors)
                 if first_unfilled_neighbor < 0:
@@ -240,10 +240,10 @@ cpdef neighbors_connected_components(list neighbors, FrozenBitset subgraph):
     cdef int i, visit
     cdef bitset_s *b
     cdef FrozenBitset FB
-    cdef bitset_s *subgraph_set = subgraph._bitset
+    cdef bitset_s *subgraph_set = &subgraph._bitset[0]
     for i in range(n):
         FB=neighbors[i]
-        b=FB._bitset        
+        b=&FB._bitset[0]
         bitset_init(&subneighbors[i], n)
         bitset_intersection(&subneighbors[i], b, subgraph_set)
             
