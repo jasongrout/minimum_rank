@@ -5,7 +5,7 @@ One goal of this library is to be able to be used both by loading the necessary 
 
 See http://sage.cs.drake.edu/home/pub/66/ for an example of how to load and use this library in Sage.  In particular, the following code in a Sage notebook cell will load this library::
 
-  URL='http://github.com/jasongrout/minimum_rank/raw/minimum_rank_1_1_1/'
+  URL='http://github.com/jasongrout/minimum_rank/raw/minimum_rank_1_1_2/'
   files=['Zq_c.pyx','Zq.py','zero_forcing_64.pyx','zero_forcing_wavefront.pyx','minrank.py', 'inertia.py']
   for f in files:
       load(URL+f)
