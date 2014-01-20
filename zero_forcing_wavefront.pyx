@@ -31,7 +31,6 @@ TODO: Make a wavefront function for looped vertices:
 #######################################################################
 
 
-include "sage/misc/bitset_pxd.pxi"
 include "sage/misc/bitset.pxi"
 from sage.misc.bitset cimport FrozenBitset, Bitset
 
