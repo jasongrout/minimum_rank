@@ -207,8 +207,7 @@ cpdef zero_forcing_set_bruteforce_cython_connected(graph, int upper_bound=-1):
     gens.update(set([x*y*z for x in gens for y in gens for z in gens]))
     # We really want ~p, but since we have all elements and their inverses
     # it makes no difference if we ask for p.list() or (~p).list()
-    # The modulus is to account for 1-based permutations, but 0-based graphs (where 0=n)
-    perm_p = [[(i % n) for i in p.list()] for p in gens]
+    perm_p = [p.domain() for p in gens]
     verbose("%s"%perm_p)
     cdef int perms[128][32]
     cdef int num_perms = min(128, len(perm_p))
