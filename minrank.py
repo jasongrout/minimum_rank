@@ -305,7 +305,7 @@ def get_mr_from_list(graph):
         if graph.is_isomorphic(atlas_graphs[i]):
             return min_ranks[i][1]
 
-    raise ValueError, "This should never happen!"
+    raise ValueError("This should never happen!")
 
 
 def zerosgame(graph, initial_set=[]):
@@ -642,14 +642,14 @@ def cut_vertex_connected_graph_mr(c_vertex,graph):
     """
     g=graph.copy()
     if g.is_connected() is False:#this should never happen
-        raise ValueError, "Graph is not connected"
+        raise ValueError("Graph is not connected")
     if c_vertex not in graph.vertices():#again, should never happen
-        raise ValueError, "Supplied vertex is not in the graph"
+        raise ValueError("Supplied vertex is not in the graph")
     g.delete_vertex(c_vertex)
     subgraphs=g.connected_components_subgraphs()
 
     if len(subgraphs) <= 1: # c_vertex is not a cut-vertex
-        raise ValueError, "Supplied vertex is not a cut vertex"
+        raise ValueError("Supplied vertex is not a cut vertex")
     
     index=0
     rank_spread=0
@@ -779,10 +779,10 @@ def minrank_bounds(graph, all_bounds=False, tests=['precomputed', 'order', 'zero
 
     # Make sure that the lower bound is not greater than the upper bound
     if max(lower_bound.values()) > min(upper_bound.values()):
-        raise StandardError, """
+        raise StandardError("""
 Best lower bound is greater than best upper bound; something is wrong:
 lower bounds: %s
-upper bounds: %s"""%(lower_bound,upper_bound)
+upper bounds: %s""" % (lower_bound,upper_bound))
 
     if all_bounds is True:
         return lower_bound, upper_bound
